@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigmoid Fit Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .upload-box {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        .upload-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .upload-box p {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 500;
+        }
+
+        .file-label:hover {
+            background: #764ba2;
+        }
+
+        .file-name {
+            display: block;
+            margin-top: 10px;
+            color: #28a745;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-play {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-pause {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-reset {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-step {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .info-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-box label {
+            display: block;
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .info-box .value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        #plotContainer {
+            width: 100%;
+            height: 500px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #plot {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .instructions {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .instructions h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #666;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .upload-section {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Sigmoid Fit Visualization</h1>
+        <p class="subtitle">Visualize and animate logistic regression parameter updates</p>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="upload-section">
+            <div class="upload-box">
+                <h3>📊 Data File</h3>
+                <p>Upload CSV with x and y columns</p>
+                <label for="dataFile" class="file-label">Choose Data File</label>
+                <input type="file" id="dataFile" accept=".csv">
+                <span class="file-name" id="dataFileName"></span>
+            </div>
+            <div class="upload-box">
+                <h3>📈 Parameters File</h3>
+                <p>Upload CSV with a and b columns</p>
+                <label for="paramsFile" class="file-label">Choose Parameters File</label>
+                <input type="file" id="paramsFile" accept=".csv">
+                <span class="file-name" id="paramsFileName"></span>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-box">
+                <label>Iteration</label>
+                <div class="value" id="iteration">0</div>
+            </div>
+            <div class="info-box">
+                <label>Parameter a</label>
+                <div class="value" id="paramA">0.000</div>
+            </div>
+            <div class="info-box">
+                <label>Parameter b</label>
+                <div class="value" id="paramB">0.000</div>
+            </div>
+            <div class="info-box">
+                <label>Total Iterations</label>
+                <div class="value" id="totalIterations">0</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-play" id="playBtn" disabled>▶ Play</button>
+            <button class="btn btn-pause" id="pauseBtn" disabled>⏸ Pause</button>
+            <button class="btn btn-step" id="stepBtn" disabled>⏭ Step</button>
+            <button class="btn btn-reset" id="resetBtn" disabled>🔄 Reset</button>
+        </div>
+
+        <div id="plotContainer">
+            <canvas id="plot"></canvas>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ul>
+                <li><strong>Data CSV Format:</strong> Two columns named 'x' and 'y' with your data points</li>
+                <li><strong>Parameters CSV Format:</strong> Two columns named 'a' and 'b' with parameter values for each iteration</li>
+                <li><strong>Play:</strong> Animate through all parameter iterations automatically</li>
+                <li><strong>Pause:</strong> Stop the animation at the current iteration</li>
+                <li><strong>Step:</strong> Move forward one iteration at a time</li>
+                <li><strong>Reset:</strong> Return to the first iteration</li>
+                <li>The sigmoid curve is calculated as: y = 1 / (1 + e^-(ax+b))</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let dataPoints = [];
+        let parameters = [];
+        let currentIteration = 0;
+        let isPlaying = false;
+        let animationInterval = null;
+
+        // DOM elements
+        const dataFileInput = document.getElementById('dataFile');
+        const paramsFileInput = document.getElementById('paramsFile');
+        const dataFileName = document.getElementById('dataFileName');
+        const paramsFileName = document.getElementById('paramsFileName');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stepBtn = document.getElementById('stepBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const iterationDisplay = document.getElementById('iteration');
+        const paramADisplay = document.getElementById('paramA');
+        const paramBDisplay = document.getElementById('paramB');
+        const totalIterationsDisplay = document.getElementById('totalIterations');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Parse CSV file
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) {
+                throw new Error('CSV file must have at least a header and one data row');
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                if (values.length === headers.length) {
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = parseFloat(values[index]);
+                    });
+                    data.push(row);
+                }
+            }
+
+            return { headers, data };
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Load data file
+        dataFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const { headers, data } = parseCSV(text);
+
+                // Validate headers
+                if (!headers.includes('x') || !headers.includes('y')) {
+                    throw new Error('Data CSV must have "x" and "y" columns');
+                }
+
+                dataPoints = data.map(row => ({ x: row.x, y: row.y }));
+                dataFileName.textContent = `✓ ${file.name}`;
+                
+                checkReadyToVisualize();
+            } catch (error) {
+                showError(`Error loading data file: ${error.message}`);
+                dataFileName.textContent = '';
+                dataPoints = [];
+            }
+        });
+
+        // Load parameters file
+        paramsFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const { headers, data } = parseCSV(text);
+
+                // Validate headers
+                if (!headers.includes('a') || !headers.includes('b')) {
+                    throw new Error('Parameters CSV must have "a" and "b" columns');
+                }
+
+                parameters = data.map(row => ({ a: row.a, b: row.b }));
+                paramsFileName.textContent = `✓ ${file.name}`;
+                totalIterationsDisplay.textContent = parameters.length;
+                
+                checkReadyToVisualize();
+            } catch (error) {
+                showError(`Error loading parameters file: ${error.message}`);
+                paramsFileName.textContent = '';
+                parameters = [];
+            }
+        });
+
+        // Check if ready to visualize
+        function checkReadyToVisualize() {
+            if (dataPoints.length > 0 && parameters.length > 0) {
+                playBtn.disabled = false;
+                stepBtn.disabled = false;
+                resetBtn.disabled = false;
+                currentIteration = 0;
+                updateVisualization();
+            }
+        }
+
+        // Calculate sigmoid function
+        function sigmoid(x, a, b) {
+            const exponent = -(a * x + b);
+            // Handle potential overflow
+            if (exponent > 20) return 0;
+            if (exponent < -20) return 1;
+            return 1 / (1 + Math.exp(exponent));
+        }
+
+        // Canvas plotting
+        const canvas = document.getElementById('plot');
+        const ctx = canvas.getContext('2d');
+        let canvasWidth, canvasHeight;
+
+        function resizeCanvas() {
+            const container = document.getElementById('plotContainer');
+            const rect = container.getBoundingClientRect();
+            canvasWidth = rect.width;
+            canvasHeight = rect.height;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            if (dataPoints.length > 0 && parameters.length > 0) {
+                updateVisualization();
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Transform coordinates from data space to canvas space
+        function getPlotBounds() {
+            if (dataPoints.length === 0) {
+                return { minX: -5, maxX: 5, minY: -0.1, maxY: 1.1 };
+            }
+
+            const xValues = dataPoints.map(p => p.x);
+            const yValues = dataPoints.map(p => p.y);
+            let minX = Math.min(...xValues);
+            let maxX = Math.max(...xValues);
+            const minY = -0.1;
+            const maxY = 1.1;
+
+            // Add padding
+            const xRange = maxX - minX;
+            const xPadding = xRange * 0.1 || 1;
+            minX -= xPadding;
+            maxX += xPadding;
+
+            return { minX, maxX, minY, maxY };
+        }
+
+        function dataToCanvas(dataX, dataY, bounds) {
+            const margin = { left: 60, right: 40, top: 60, bottom: 60 };
+            const plotWidth = canvasWidth - margin.left - margin.right;
+            const plotHeight = canvasHeight - margin.top - margin.bottom;
+
+            const x = margin.left + (dataX - bounds.minX) / (bounds.maxX - bounds.minX) * plotWidth;
+            const y = margin.top + (1 - (dataY - bounds.minY) / (bounds.maxY - bounds.minY)) * plotHeight;
+
+            return { x, y };
+        }
+
+        // Generate sigmoid curve points
+        function generateSigmoidCurve(a, b, bounds) {
+            const curvePoints = [];
+            const numPoints = 200;
+
+            for (let i = 0; i < numPoints; i++) {
+                const dataX = bounds.minX + (bounds.maxX - bounds.minX) * i / (numPoints - 1);
+                const dataY = sigmoid(dataX, a, b);
+                curvePoints.push({ dataX, dataY });
+            }
+
+            return curvePoints;
+        }
+
+        // Update visualization
+        function updateVisualization() {
+            if (dataPoints.length === 0 || parameters.length === 0) return;
+
+            const currentParams = parameters[currentIteration];
+            const { a, b } = currentParams;
+
+            // Update displays
+            iterationDisplay.textContent = currentIteration + 1;
+            paramADisplay.textContent = a.toFixed(3);
+            paramBDisplay.textContent = b.toFixed(3);
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            // Get plot bounds
+            const bounds = getPlotBounds();
+            const margin = { left: 60, right: 40, top: 60, bottom: 60 };
+
+            // Fill background
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(margin.left, margin.top, 
+                        canvasWidth - margin.left - margin.right, 
+                        canvasHeight - margin.top - margin.bottom);
+
+            // Draw grid
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            // Vertical grid lines
+            for (let i = 0; i <= 10; i++) {
+                const dataX = bounds.minX + (bounds.maxX - bounds.minX) * i / 10;
+                const { x, y: y1 } = dataToCanvas(dataX, bounds.minY, bounds);
+                const { y: y2 } = dataToCanvas(dataX, bounds.maxY, bounds);
+                ctx.beginPath();
+                ctx.moveTo(x, y1);
+                ctx.lineTo(x, y2);
+                ctx.stroke();
+            }
+
+            // Horizontal grid lines
+            for (let i = 0; i <= 10; i++) {
+                const dataY = bounds.minY + (bounds.maxY - bounds.minY) * i / 10;
+                const { x: x1, y } = dataToCanvas(bounds.minX, dataY, bounds);
+                const { x: x2 } = dataToCanvas(bounds.maxX, dataY, bounds);
+                ctx.beginPath();
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.stroke();
+            }
+
+            // Draw axes
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+
+            // X-axis (at y=0 if in range, otherwise at bottom)
+            const yAxisPos = Math.max(bounds.minY, Math.min(0, bounds.maxY));
+            const { x: x1, y: yAxisY } = dataToCanvas(bounds.minX, yAxisPos, bounds);
+            const { x: x2 } = dataToCanvas(bounds.maxX, yAxisPos, bounds);
+            ctx.beginPath();
+            ctx.moveTo(x1, yAxisY);
+            ctx.lineTo(x2, yAxisY);
+            ctx.stroke();
+
+            // Y-axis (at x=0 if in range, otherwise at left)
+            const xAxisPos = Math.max(bounds.minX, Math.min(0, bounds.maxX));
+            const { x: xAxisX, y: y1 } = dataToCanvas(xAxisPos, bounds.minY, bounds);
+            const { y: y2 } = dataToCanvas(xAxisPos, bounds.maxY, bounds);
+            ctx.beginPath();
+            ctx.moveTo(xAxisX, y1);
+            ctx.lineTo(xAxisX, y2);
+            ctx.stroke();
+
+            // Draw sigmoid curve
+            const sigmoidPoints = generateSigmoidCurve(a, b, bounds);
+            ctx.strokeStyle = '#764ba2';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            let first = true;
+            for (const point of sigmoidPoints) {
+                const { x, y } = dataToCanvas(point.dataX, point.dataY, bounds);
+                if (first) {
+                    ctx.moveTo(x, y);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+
+            // Draw data points
+            ctx.fillStyle = '#667eea';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+
+            for (const point of dataPoints) {
+                const { x, y } = dataToCanvas(point.x, point.y, bounds);
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // Draw labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // Title
+            const title = `Sigmoid Fit: y = 1/(1+e^-(${a.toFixed(2)}x+${b.toFixed(2)}))`;
+            ctx.font = 'bold 16px "Segoe UI", sans-serif';
+            ctx.fillText(title, canvasWidth / 2, 10);
+
+            // X-axis label
+            ctx.font = '14px "Segoe UI", sans-serif';
+            ctx.fillText('x', canvasWidth / 2, canvasHeight - 20);
+
+            // Y-axis label
+            ctx.save();
+            ctx.translate(15, canvasHeight / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('y', 0, 0);
+            ctx.restore();
+
+            // Legend
+            ctx.font = '12px "Segoe UI", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillRect(margin.left + 10, margin.top + 10, 120, 50);
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(margin.left + 10, margin.top + 10, 120, 50);
+
+            // Data points legend
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(margin.left + 20, margin.top + 25, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.fillText('Data Points', margin.left + 30, margin.top + 20);
+
+            // Sigmoid curve legend
+            ctx.strokeStyle = '#764ba2';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(margin.left + 15, margin.top + 45);
+            ctx.lineTo(margin.left + 25, margin.top + 45);
+            ctx.stroke();
+            ctx.fillStyle = '#333';
+            ctx.fillText('Sigmoid Fit', margin.left + 30, margin.top + 40);
+        }
+
+        // Animation controls
+        playBtn.addEventListener('click', () => {
+            if (isPlaying) return;
+            
+            isPlaying = true;
+            playBtn.disabled = true;
+            pauseBtn.disabled = false;
+
+            animationInterval = setInterval(() => {
+                if (currentIteration < parameters.length - 1) {
+                    currentIteration++;
+                    updateVisualization();
+                } else {
+                    // Reached the end
+                    pauseAnimation();
+                }
+            }, 500); // 500ms between iterations
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            pauseAnimation();
+        });
+
+        function pauseAnimation() {
+            isPlaying = false;
+            playBtn.disabled = false;
+            pauseBtn.disabled = true;
+            
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+        }
+
+        stepBtn.addEventListener('click', () => {
+            if (currentIteration < parameters.length - 1) {
+                currentIteration++;
+                updateVisualization();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            pauseAnimation();
+            currentIteration = 0;
+            updateVisualization();
+        });
+
+        // Draw initial empty plot
+        function drawEmptyPlot() {
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 18px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Upload data and parameters to begin', canvasWidth / 2, canvasHeight / 2);
+        }
+
+        drawEmptyPlot();
+    </script>
+</body>
+</html>
